@@ -1,8 +1,6 @@
-import { useState } from "react";
+import PropTypes from "prop-types";
 
-export default function SearchBar() {
-  const [query, setQuery] = useState("");
-
+export default function SearchBar({ query, setQuery }) {
   return (
     <input
       className="search"
@@ -13,3 +11,7 @@ export default function SearchBar() {
     />
   );
 }
+SearchBar.propTypes = {
+  query: PropTypes.string,
+  setQuery: PropTypes.func,
+};

@@ -72,6 +72,30 @@ function MovieDetails({
     getMovieDetails();
   }, [movieID, apiKey]);
 
+  useEffect(() => {
+    if (!title) return;
+    document.title = `Movie | ${title}`;
+
+    // Cleanup function
+    return function () {
+      document.title = "usePopcorn";
+    };
+  }, [title]);
+
+  useEffect(() => {
+    function callback(e) {
+      if (e.code === "Escape") {
+        handleCloseMovieClick();
+      }
+    }
+    document.addEventListener("keypress", callback);
+
+    // Cleanup func
+    return function () {
+      document.removeEventListener("keypress", callback);
+    };
+  }, [handleCloseMovieClick]);
+
   return (
     <div className="details">
       {isLoading && <Message message={"Loading..."} type={"loader"} />}

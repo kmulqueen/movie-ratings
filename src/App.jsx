@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import NavBar from "./components/structural/NavBar";
 import Main from "./components/structural/Main";
-import SearchBar from "./components/stateful/SearchBar";
+import SearchBar from "./components/stateless/SearchBar";
 import ResultsCount from "./components/stateless/ResultsCount";
 import ListBox from "./components/stateful/ListBox";
 import MovieList from "./components/stateless/MovieList";
@@ -14,10 +14,10 @@ export default function App() {
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
+  const [query, setQuery] = useState("Interstellar");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const apiKey = import.meta.env.VITE_OMDB_API_KEY;
-  const query = "Interstellar";
 
   function handleSelectMovieClick(id) {
     setSelectedId((selectedId) => (id === selectedId ? null : id));
@@ -39,11 +39,14 @@ export default function App() {
 
   useEffect(
     function () {
+      const controller = new AbortController();
+
       async function fetchMovies() {
         try {
           setIsLoading(true);
           const res = await fetch(
-            `http://www.omdbapi.com/?apikey=${apiKey}&s=${query}`
+            `http://www.omdbapi.com/?apikey=${apiKey}&s=${query}`,
+            { signal: controller.signal }
           );
 
           if (!res.ok) {
@@ -57,22 +60,30 @@ export default function App() {
           }
 
           setMovies(data.Search);
+          setErrorMessage("");
         } catch (error) {
-          setErrorMessage(error.message);
+          if (error.name !== "AbortError") {
+            setErrorMessage(error.message);
+          }
         } finally {
           setIsLoading(false);
         }
       }
 
       fetchMovies();
+
+      // Cleanup func
+      return function () {
+        controller.abort();
+      };
     },
-    [apiKey]
+    [apiKey, query]
   );
 
   return (
     <>
       <NavBar>
-        <SearchBar />
+        <SearchBar query={query} setQuery={setQuery} />
         <ResultsCount movies={movies} />
       </NavBar>
       <Main>
