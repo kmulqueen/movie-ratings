@@ -45,7 +45,7 @@ function useMovies(query) {
     return function () {
       controller.abort();
     };
-  }, [apiKey, query]);
+  }, [query]);
 
   return { movies, isLoading, errorMessage };
 }
