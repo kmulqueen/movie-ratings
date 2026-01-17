@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import PropTypes from "prop-types";
 import StarRating from "./StarRating";
 import Message from "../stateless/Message";
+import { useKeyPress } from "../../hooks";
 
 function MovieDetails({
   movieID,
@@ -13,6 +14,7 @@ function MovieDetails({
   const [userRating, setUserRating] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const countRef = useRef(0);
   const {
     Title: title,
     Poster: poster,
@@ -28,7 +30,7 @@ function MovieDetails({
   const apiKey = import.meta.env.VITE_OMDB_API_KEY;
   const movieWatched = watched.some((movie) => movie.imdbID === movieID);
   const watchedUserRating = watched.find(
-    (movie) => movie.imdbID === movieID
+    (movie) => movie.imdbID === movieID,
   )?.userRating;
 
   function handleAdd() {
@@ -40,6 +42,7 @@ function MovieDetails({
       imdbRating: Number(imdbRating),
       runtime: Number(runtime.split(" ").at(0)),
       userRating,
+      countRatingDecisions: countRef.current,
     };
     handleAddWatchedMovie(newWatchedMovie);
     handleCloseMovieClick();
@@ -50,7 +53,7 @@ function MovieDetails({
       try {
         setIsLoading(true);
         const res = await fetch(
-          `http://www.omdbapi.com/?apikey=${apiKey}&i=${movieID}`
+          `http://www.omdbapi.com/?apikey=${apiKey}&i=${movieID}`,
         );
 
         if (!res.ok) {
@@ -82,19 +85,13 @@ function MovieDetails({
     };
   }, [title]);
 
-  useEffect(() => {
-    function callback(e) {
-      if (e.code === "Escape") {
-        handleCloseMovieClick();
-      }
-    }
-    document.addEventListener("keypress", callback);
+  useKeyPress("Escape", handleCloseMovieClick);
 
-    // Cleanup func
-    return function () {
-      document.removeEventListener("keypress", callback);
-    };
-  }, [handleCloseMovieClick]);
+  useEffect(() => {
+    if (userRating) {
+      countRef.current++;
+    }
+  }, [userRating]);
 
   return (
     <div className="details">
